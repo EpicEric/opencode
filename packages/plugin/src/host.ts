@@ -22,20 +22,11 @@ export function resolve(target: Target): Entrypoints {
         : path.resolve(target.directory, subpath || "index")
       try {
         return resolveModule(specifier, target.directory)
-      } catch (error) {
-        if (
-          !(error instanceof Error) ||
-          !("code" in error) ||
-          ![
-            "ENOENT",
-            "ENOTDIR",
-            "MODULE_NOT_FOUND",
-            "ERR_MODULE_NOT_FOUND",
-            "ERR_PACKAGE_PATH_NOT_EXPORTED",
-            "ERR_UNSUPPORTED_DIR_IMPORT",
-          ].includes(String(error.code))
-        )
-          throw error
+      } catch {
+        // An unresolvable candidate means the conventional entrypoint is
+        // absent. Resolution errors do not carry a stable error code across
+        // Bun builds, so tolerate every failure instead of inspecting
+        // `error.code` and fall through to the next candidate.
       }
     }
     return undefined
